@@ -1,0 +1,206 @@
+DATABASE
+******************************************************************************************************************************************************************************************
+create table musicians(ssn integer, name char(20), annualincome integer, primary key(ssn))
+
+insert into musicians(ssn, name, annualincome) values(1111, 'sarthak', 4000)
+insert into musicians(ssn, name, annualincome) values(1112, 'sanyam', 3000)
+insert into musicians(ssn, name, annualincome) values(1113, 'pratik', 2000)
+insert into musicians(ssn, name, annualincome) values(1114, 'clinton', 5000)
+insert into musicians(ssn, name, annualincome) values(1110, 'sahitya', 4000)
+insert into musicians(ssn, name, annualincome) values(1115, 'john', 4000)
+insert into musicians(ssn, name, annualincome) values(1116, 'john', 3000)
+insert into musicians(ssn, name, annualincome) values(1117, 'john', 6000)
+
+
+create table instruments(instrid integer, iname char(20), key char(20), primary key(instrid))
+
+insert into instruments(instrid,iname, key) values (1,'piano','a')
+insert into instruments(instrid,iname, key) values (2,'guitar','b')
+insert into instruments(instrid,iname, key) values (3,'violin','b')
+insert into instruments(instrid,iname, key) values (4,'drums','c')
+
+
+create table plays(ssn integer, instrid integer, primary key(ssn,instrid), foreign key(ssn) references musicians, foreign key(instrid) references instruments)
+
+insert into plays(ssn,instrid) values (1115,1)
+insert into plays(ssn,instrid) values (1116,1)
+insert into plays(ssn,instrid) values (1117,1)
+insert into plays(ssn,instrid) values (1117,2)
+insert into plays(ssn,instrid) values (1116,3)
+insert into plays(ssn,instrid) values (1111,4)
+insert into plays(ssn,instrid) values (1110,3)
+
+
+create table songappears(songid char(20), authorssn integer,title char(20), albumidentifier char(20), primary key(songid))
+
+insert into songappears (songid, authorssn, title, albumidentifier) values ('song1', 1115, 'romantic', 'r2')
+insert into songappears (songid, authorssn, title, albumidentifier) values ('song2', 1116, 'rock on', 'r1')
+insert into songappears (songid, authorssn, title, albumidentifier) values ('song3', 1112, 'party', 'p1')
+insert into songappears (songid, authorssn, title, albumidentifier) values ('song4', 1115, 'rock', 'r1')
+
+
+create table place(address char(20),otherinfo char(20), primary key(address))
+
+insert into place(address, otherinfo) values ('pune', 'xyz')
+insert into place(address, otherinfo) values ('mumbai', 'xyz')
+insert into place(address, otherinfo) values ('delhi', 'abc')
+insert into place(address, otherinfo) values ('chennai', 'def')
+insert into place(address, otherinfo) values ('fairfax', 'lmn')
+insert into place(address, otherinfo) values ('columbus', 'ohio')
+
+
+create table lives(ssn integer, address char(20), phone integer, primary key(ssn,address), foreign key(ssn) references musicians, foreign key(address) references place)
+
+insert into lives(ssn, address, phone) values (1110, 'pune', 1234)
+insert into lives(ssn, address, phone) values (1111, 'pune', 1235)
+insert into lives(ssn, address, phone) values (1112, 'mumbai', 2235)
+insert into lives(ssn, address, phone) values (1113, 'delhi', 2236)
+insert into lives(ssn, address, phone) values (1114, 'chennai', 2336)
+insert into lives(ssn, address, phone) values (1115, 'fairfax', 6336)
+insert into lives(ssn, address, phone) values (1116, 'columbus', 6636)
+insert into lives(ssn, address, phone) values (1117, 'fairfax', 6666)
+
+
+create table perform(songid char(20),ssn integer, primary key(songid,ssn), foreign key(ssn) references musicians, foreign key(songid) references songappears)
+
+insert into perform(songid, ssn) values('song1',1115)
+insert into perform(songid, ssn) values('song2',1116)
+insert into perform(songid, ssn) values('song2',1111)
+insert into perform(songid, ssn) values('song2',1112)
+insert into perform(songid, ssn) values('song2',1115)
+insert into perform(songid, ssn) values('song4',1115)
+
+create table albumproducer (ssn integer, albumidentifier char(20), date1 char(20), speed integer, title char(20), primary key(albumidentifier), foreign key(ssn) references musicians)
+
+insert into albumproducer (ssn, albumidentifier, date1, speed, title) values (1115, 'r1', '20jan', 100, 'rock')
+insert into albumproducer (ssn, albumidentifier, date1, speed, title) values (1115, 'r2', '201an', 130, 'romantic')
+insert into albumproducer (ssn, albumidentifier, date1, speed, title) values (1112, 'p1', '21jan', 180, 'party')
+
+*****************************************************************************************************************************************************************************************
+QUERIES
+
+*****************************************************************************************************************************************************************************************
+1.  select distinct p.instrid
+from plays p
+where p.ssn in (select m.ssn
+from musicians m
+where m.name = 'john')
+
+
+2. select distinct p.instrid
+from plays p
+where not exists (select m.ssn
+from musicians m
+where m.name = 'john'
+and (not exists (select p1.instrid
+from plays p1
+where p1.instrid = p.instrid and
+p1.ssn = m.ssn)))
+	
+
+3.  select distinct p.instrid 
+from plays p 
+where p.ssn  in (select m.ssn 
+from musicians m 
+where m.name =  'john') and
+p.instrid not in(select p.instrid 
+from plays p 
+where p.ssn  in (select m.ssn 
+from musicians m 
+where m.name <> 'john'))
+
+
+4.  select a.title
+from albumproducer a
+where a.ssn in ( select p.ssn
+from musicians m, plays p
+where a.ssn=m.ssn and p.ssn=m.ssn and p.instrid in (select i.instrid
+from instruments i
+where i.iname='guitar' or iname='piano'))
+
+
+5.  select p1.ssn 
+from perform p1, perform p2 
+where p1.songid = 'song1'
+and p2.songid = 'song2'
+and p1.ssn = p2.ssn
+
+
+
+6.  select m.ssn 
+from musicians m 
+where m.ssn <> all
+(select m1.ssn from musicians m1,musicians m2 
+where m1.annualIncome < m2.annualIncome 
+and m1.ssn<>m2.ssn )
+
+
+7.  select m.ssn 
+from musicians m 
+where m.ssn <> all
+(select m1.ssn from musicians m1,musicians m2 
+where m1.annualIncome <= m2.annualIncome and m1.ssn<>m2.ssn )
+
+
+8. select  m1.name, m2.name
+from lives l1, lives l2 ,musicians m1, musicians m2 
+where l1.address = l2.address and l1.ssn != l2.ssn 
+and m1.ssn= l1.ssn and m2.ssn = l2.ssn
+
+
+9.  select songID 
+from songappears 
+where songID != all(select songID 
+from perform)
+
+10. select distinct p.ssn
+FROM perform p
+WHERE NOT EXISTS (SELECT p.ssn, p.songID
+FROM perform p1
+WHERE  NOT EXISTS (SELECT s.authorssn,songID
+FROM songappears s,musicians m
+WHERE m.ssn= s.authorssn
+AND p.songID = s.songID
+AND m.name = 'john'))
+
+
+11.  select distinct s.authorssn
+from songappears s
+where s.songid in (select p.songid 
+from perform p
+where p.ssn = s.authorssn)
+
+
+12.  select s.authorssn
+from songappears s
+where not exists (select p.songid 
+from perform p
+where p.ssn = s.authorssn
+and (not exists (select s1.authorssn
+from songappears s1
+where  s1.authorssn=s.authorssn and
+s1.songid = p.songid)))
+
+
+13.   select distinct p.ssn
+from perform p
+where not exists (select s.songid 
+from songappears s
+where s.authorssn = p.ssn
+and (not exists (select p1.ssn
+from perform p1
+where  p1.ssn = p.ssn and
+p1.songid = s.songid)))
+
+
+14.  select distinct s.authorssn
+from songappears s
+where s.songid in (select p.songid 
+from perform p
+where p.ssn = s.authorssn) 
+intersect ( select s.authorssn
+from songappears s
+where s.songid in (select p.songid 
+from perform p
+where p.ssn <> s.authorssn))
+
